@@ -3,7 +3,7 @@ Flask API for the Climate Assistant RAG system
 Compatible with the existing frontend
 """
 import logging
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import os
 
@@ -97,6 +97,7 @@ def get_response():
         if result["success"]:
             return jsonify({
                 "response": result["response"],
+                "response_html": result.get("response_html", result["response"]),
                 "metadata": {
                     "citations_count": len(result["citations"]),
                     "retrieved_docs_count": result["retrieved_docs_count"],
@@ -192,6 +193,16 @@ def reload_system():
     except Exception as e:
         logger.error(f"Error reloading system: {str(e)}")
         return jsonify({"error": str(e)}), 500
+
+@app.route('/')
+def index():
+    """Serve the main HTML file"""
+    return send_from_directory('static', 'pln.html')
+
+@app.route('/<path:filename>')
+def static_files(filename):
+    """Serve static files"""
+    return send_from_directory('static', filename)
 
 if __name__ == "__main__":
     logger.info("Starting Climate Assistant API...")

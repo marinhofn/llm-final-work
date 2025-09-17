@@ -103,6 +103,7 @@
     </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
         let messages = [{
             'role': 'system', 
@@ -147,15 +148,24 @@
             loadingOverlay.style.display = 'none';
         }
         
-        function createMessageElement(content, isUser = false) {
+        function createMessageElement(content, isUser = false, isHtml = false) {
             const messageContainer = document.createElement('div');
             messageContainer.className = `message-container ${isUser ? 'user' : 'bot'}`;
             
             const messageBubble = document.createElement('div');
             messageBubble.className = `message-bubble ${isUser ? 'user' : 'bot'}`;
             
-            const messageContent = document.createElement('p');
-            messageContent.textContent = content;
+            const messageContent = document.createElement('div');
+            
+            if (isHtml && !isUser) {
+                // For bot messages, use HTML if available
+                messageContent.innerHTML = content;
+                // Add markdown styling classes
+                messageContent.classList.add('markdown-content');
+            } else {
+                // For user messages or fallback, use text content
+                messageContent.textContent = content;
+            }
             
             messageBubble.appendChild(messageContent);
             messageContainer.appendChild(messageBubble);
@@ -225,31 +235,48 @@
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({ messages: messages }),
-                timeout: 30000, // 30 second timeout
+                timeout: 300000, // 30 second timeout
                 success: function(response) {
                     hideLoading();
                     
+                    // Check if we have HTML version of the response
+                    const responseContent = response.response_html || response.response;
+                    const isHtml = !!response.response_html;
+                    
                     // Add bot response with typing effect
-                    const botMessage = createMessageElement('', false);
+                    const botMessage = createMessageElement('', false, isHtml);
                     chat.appendChild(botMessage);
                     scrollToBottom();
                     
-                    // Typing effect
-                    const botContent = botMessage.querySelector('p');
-                    const text = response.response;
-                    let index = 0;
+                    // Get the content container
+                    const botContent = botMessage.querySelector('div.markdown-content') || botMessage.querySelector('p');
                     
-                    function typeText() {
-                        if (index < text.length) {
-                            botContent.textContent += text.charAt(index);
-                            index++;
+                    if (isHtml) {
+                        // For HTML content, show it directly with fade-in effect
+                        botContent.style.opacity = '0';
+                        setTimeout(() => {
+                            botContent.innerHTML = responseContent;
+                            botContent.style.transition = 'opacity 0.5s ease-in';
+                            botContent.style.opacity = '1';
                             scrollToBottom();
-                            setTimeout(typeText, 20); // Adjust typing speed here
+                        }, 500);
+                    } else {
+                        // Typing effect for plain text
+                        const text = responseContent;
+                        let index = 0;
+                        
+                        function typeText() {
+                            if (index < text.length) {
+                                botContent.textContent += text.charAt(index);
+                                index++;
+                                scrollToBottom();
+                                setTimeout(typeText, 20); // Adjust typing speed here
+                            }
                         }
+                        
+                        // Start typing after a short delay
+                        setTimeout(typeText, 500);
                     }
-                    
-                    // Start typing after a short delay
-                    setTimeout(typeText, 500);
                 },
                 error: function(xhr, status, error) {
                     hideLoading();

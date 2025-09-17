@@ -3,6 +3,7 @@ LangGraph agents for the RAG system
 """
 import json
 import logging
+import markdown
 from typing import Dict, List, Any, Optional, TypedDict, Annotated
 from langchain_ollama import ChatOllama
 from langchain.schema import BaseMessage, HumanMessage, AIMessage, SystemMessage
@@ -186,9 +187,15 @@ class ClimateAssistantAgents:
             3. Se não houver informações suficientes, diga claramente
             4. Seja preciso e científico
             5. Evite especulações ou informações não presentes nos documentos
+            6. **Formate sua resposta usando Markdown** para melhor legibilidade:
+               - Use **negrito** para termos importantes
+               - Use *itálico* para ênfase
+               - Use listas com - ou números quando apropriado
+               - Use ## para subtítulos quando necessário
+               - Use `código` para valores específicos ou termos técnicos
             
             Formato da resposta:
-            - Resposta clara e objetiva
+            - Resposta clara e objetiva em Markdown
             - Citações obrigatórias [Fonte X]
             - Se aplicável, mencione limitações ou incertezas
             """),
@@ -324,6 +331,17 @@ class ClimateAssistantAgents:
         else:
             return "end"
     
+    def _convert_markdown_to_html(self, text: str) -> str:
+        """Convert Markdown text to HTML"""
+        try:
+            # Configure markdown with extensions for better formatting
+            md = markdown.Markdown(extensions=['nl2br', 'codehilite', 'fenced_code'])
+            return md.convert(text)
+        except Exception as e:
+            logger.warning(f"Error converting markdown to HTML: {str(e)}")
+            # Return original text if conversion fails
+            return text
+    
     def process_query(self, query: str) -> Dict[str, Any]:
         """Process a user query through the agent system"""
         initial_state = {
@@ -340,8 +358,11 @@ class ClimateAssistantAgents:
         
         try:
             result = self.graph.invoke(initial_state)
+            response_text = result["final_response"]
+            
             return {
-                "response": result["final_response"],
+                "response": response_text,
+                "response_html": self._convert_markdown_to_html(response_text),
                 "citations": result["citations"],
                 "retrieved_docs_count": len(result["retrieved_docs"]),
                 "success": True

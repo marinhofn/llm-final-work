@@ -1,75 +1,337 @@
-<!DOCTYPE html> 
-    <html lang="en">
-    <head>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />  
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <link rel="stylesheet" href="styles.css" />
-    <title>Climate Assistant</title>
-    </head>
-    <body>
-    <div class="chat-wrapper">
-        <div class="chat-container">
-        <div class="navbar">
-            <a href="#"><img src="./seta.png" alt="Seta para a esquerda" style="width: 15px; height: 15px; vertical-align: middle" /></a>
-            <a href="#" style="font-weight: bold">Climate Assistant</a>  
+    <title>Tributouro - Assistente Jurídico</title>
+</head>
+<body>
+    <div class="mdc-layout-grid">
+        <div class="mdc-layout-grid__inner">
+            <div class="mdc-layout-grid__cell mdc-layout-grid__cell--span-12">
+                <div class="chat-container mdc-elevation--z4">
+                    <!-- Header/TopAppBar -->
+                    <header class="mdc-top-app-bar mdc-top-app-bar--fixed">
+                        <div class="mdc-top-app-bar__row">
+                            <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-start">
+                                <button class="mdc-icon-button mdc-top-app-bar__navigation-icon">
+                                    <i class="material-icons">arrow_back</i>
+                                </button>
+                                <span class="mdc-top-app-bar__title">Tributouro</span>
+                            </section>
+                            <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end">
+                                <button class="mdc-icon-button" title="Mais opções">
+                                    <i class="material-icons">more_vert</i>
+                                </button>
+                            </section>
+                        </div>
+                    </header>
+
+                    <!-- Chat Messages Area -->
+                    <main class="chat-main" id="chat">
+                        <div class="welcome-message">
+                            <div class="mdc-card mdc-elevation--z2">
+                                <div class="mdc-card__primary-action">
+                                    <div class="mdc-card__content">
+                                        <div class="welcome-icon">
+                                            <i class="material-icons">gavel</i>
+                                        </div>
+                                        <h2 class="mdc-typography--headline6">Bem-vindo ao Tributouro</h2>
+                                        <p class="mdc-typography--body2">
+                                            Sou seu assistente jurídico especializado em direito tributário brasileiro.
+                                            Como posso ajudá-lo hoje?
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </main>
+
+                    <!-- Input Area -->
+                    <div class="input-container">
+                        <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--with-trailing-icon">
+                            <input class="mdc-text-field__input" id="inputMessage" type="text" placeholder="Digite sua pergunta jurídica..." />
+                            <div class="mdc-notched-outline">
+                                <div class="mdc-notched-outline__leading"></div>
+                                <div class="mdc-notched-outline__notch">
+                                    <label for="inputMessage" class="mdc-floating-label">Sua pergunta</label>
+                                </div>
+                                <div class="mdc-notched-outline__trailing"></div>
+                            </div>
+                            <button class="mdc-icon-button mdc-text-field__icon mdc-text-field__icon--trailing" id="sendButton">
+                                <i class="material-icons">send</i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="chat" id="chat">    
+    </div>
+
+    <!-- Loading Indicator -->
+    <div class="loading-overlay" id="loadingOverlay" style="display: none;">
+        <div class="mdc-circular-progress" style="width: 48px; height: 48px;" role="progressbar" aria-label="Carregando">
+            <div class="mdc-circular-progress__determinate-container">
+                <svg class="mdc-circular-progress__determinate-circle-graphic" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                    <circle class="mdc-circular-progress__determinate-track" cx="24" cy="24" r="18" stroke-width="4"/>
+                    <circle class="mdc-circular-progress__determinate-circle" cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="113.097" stroke-width="4"/>
+                </svg>
+            </div>
+            <div class="mdc-circular-progress__indeterminate-container">
+                <div class="mdc-circular-progress__spinner-layer">
+                    <div class="mdc-circular-progress__circle-clipper mdc-circular-progress__circle-left">
+                        <svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="56.549" stroke-width="4"/>
+                        </svg>
+                    </div>
+                    <div class="mdc-circular-progress__gap-patch">
+                        <svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="56.549" stroke-width="3.2"/>
+                        </svg>
+                    </div>
+                    <div class="mdc-circular-progress__circle-clipper mdc-circular-progress__circle-right">
+                        <svg class="mdc-circular-progress__indeterminate-circle-graphic" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="24" cy="24" r="18" stroke-dasharray="113.097" stroke-dashoffset="56.549" stroke-width="4"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
         </div>
-        <div class="input-bar">
-            <input id="inputMessage" type="text" placeholder="Escreva uma mensagem para Climate Assistant ..." />
-            <button id="sendButton" style="border: none;">Enviar</button>    
-        </div>
-        <div class="footer"></div>
-        </div>  
     </div>
 
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
     <script>
-    let messages = [{
-          'role': 'system', 
-          'content': 'Você é um assistente especializado em mudanças climáticas e meio ambiente. Responda com base em evidências científicas e sempre cite suas fontes.'
+        let messages = [{
+            'role': 'system', 
+            'content': 'responda a seguinte pergunta de forma clara e concisa, contendo as leis que dizem respeito ao assunto no Brasil e aconselhe, caso necessário, a buscar um advogado'
         }];
 
-    
-    const inputMessage = document.getElementById('inputMessage');
-    const sendButton = document.getElementById('sendButton'); 
-    const chat = document.getElementById('chat');
-    
-    function sendMessage() {
-      if (inputMessage.value) {
-        messages.push({
-          'role': 'user', 
-          'content': inputMessage.value
+        const inputMessage = document.getElementById('inputMessage');
+        const sendButton = document.getElementById('sendButton'); 
+        const chat = document.getElementById('chat');
+        const loadingOverlay = document.getElementById('loadingOverlay');
+        
+        // Remove welcome message when first message is sent
+        let isFirstMessage = true;
+        
+        // Initialize Material Design components
+        function initializeMDC() {
+            // Focus management for text field
+            inputMessage.addEventListener('focus', function() {
+                const textField = this.closest('.mdc-text-field');
+                const floatingLabel = textField.querySelector('.mdc-floating-label');
+                if (floatingLabel) {
+                    floatingLabel.style.transform = 'translateY(-50%) scale(0.75)';
+                    floatingLabel.style.color = 'var(--mdc-primary)';
+                }
+            });
+            
+            inputMessage.addEventListener('blur', function() {
+                const textField = this.closest('.mdc-text-field');
+                const floatingLabel = textField.querySelector('.mdc-floating-label');
+                if (floatingLabel && !this.value) {
+                    floatingLabel.style.transform = 'translateY(-50%) scale(1)';
+                    floatingLabel.style.color = 'rgba(0, 0, 0, 0.6)';
+                }
+            });
+        }
+        
+        function showLoading() {
+            loadingOverlay.style.display = 'flex';
+        }
+        
+        function hideLoading() {
+            loadingOverlay.style.display = 'none';
+        }
+        
+        function createMessageElement(content, isUser = false, isHtml = false) {
+            const messageContainer = document.createElement('div');
+            messageContainer.className = `message-container ${isUser ? 'user' : 'bot'}`;
+            
+            const messageBubble = document.createElement('div');
+            messageBubble.className = `message-bubble ${isUser ? 'user' : 'bot'}`;
+            
+            const messageContent = document.createElement('div');
+            
+            if (isHtml && !isUser) {
+                // For bot messages, use HTML if available
+                messageContent.innerHTML = content;
+                // Add markdown styling classes
+                messageContent.classList.add('markdown-content');
+            } else {
+                // For user messages or fallback, use text content
+                messageContent.textContent = content;
+            }
+            
+            messageBubble.appendChild(messageContent);
+            messageContainer.appendChild(messageBubble);
+            
+            return messageContainer;
+        }
+        
+        function scrollToBottom() {
+            chat.scrollTop = chat.scrollHeight;
+        }
+        
+        function removeWelcomeMessage() {
+            const welcomeMessage = document.querySelector('.welcome-message');
+            if (welcomeMessage) {
+                welcomeMessage.style.opacity = '0';
+                welcomeMessage.style.transform = 'translateY(-20px)';
+                setTimeout(() => {
+                    welcomeMessage.remove();
+                }, 300);
+            }
+        }
+        
+        function sendMessage() {
+            const messageText = inputMessage.value.trim();
+            
+            if (!messageText) {
+                // Shake animation for empty input
+                inputMessage.parentElement.style.animation = 'shake 0.5s ease-in-out';
+                setTimeout(() => {
+                    inputMessage.parentElement.style.animation = '';
+                }, 500);
+                return;
+            }
+            
+            // Remove welcome message on first user message
+            if (isFirstMessage) {
+                removeWelcomeMessage();
+                isFirstMessage = false;
+            }
+            
+            messages.push({
+                'role': 'user', 
+                'content': messageText
+            });
+            
+            // Create and add user message
+            const userMessage = createMessageElement(messageText, true);
+            chat.appendChild(userMessage);
+            
+            // Clear input and scroll to bottom
+            inputMessage.value = '';
+            scrollToBottom();
+            
+            // Update floating label
+            const floatingLabel = inputMessage.closest('.mdc-text-field').querySelector('.mdc-floating-label');
+            if (floatingLabel) {
+                floatingLabel.style.transform = 'translateY(-50%) scale(1)';
+                floatingLabel.style.color = 'rgba(0, 0, 0, 0.6)';
+            }
+            
+            // Show loading
+            showLoading();
+            
+            // Send messages to Python server
+            $.ajax({
+                url: 'http://localhost:5000/get_response',
+                type: 'POST',
+                contentType: 'application/json',
+                data: JSON.stringify({ messages: messages }),
+                timeout: 300000, // 30 second timeout
+                success: function(response) {
+                    hideLoading();
+                    
+                    // Check if we have HTML version of the response
+                    const responseContent = response.response_html || response.response;
+                    const isHtml = !!response.response_html;
+                    
+                    // Add bot response with typing effect
+                    const botMessage = createMessageElement('', false, isHtml);
+                    chat.appendChild(botMessage);
+                    scrollToBottom();
+                    
+                    // Get the content container
+                    const botContent = botMessage.querySelector('div.markdown-content') || botMessage.querySelector('p');
+                    
+                    if (isHtml) {
+                        // For HTML content, show it directly with fade-in effect
+                        botContent.style.opacity = '0';
+                        setTimeout(() => {
+                            botContent.innerHTML = responseContent;
+                            botContent.style.transition = 'opacity 0.5s ease-in';
+                            botContent.style.opacity = '1';
+                            scrollToBottom();
+                        }, 500);
+                    } else {
+                        // Typing effect for plain text
+                        const text = responseContent;
+                        let index = 0;
+                        
+                        function typeText() {
+                            if (index < text.length) {
+                                botContent.textContent += text.charAt(index);
+                                index++;
+                                scrollToBottom();
+                                setTimeout(typeText, 20); // Adjust typing speed here
+                            }
+                        }
+                        
+                        // Start typing after a short delay
+                        setTimeout(typeText, 500);
+                    }
+                },
+                error: function(xhr, status, error) {
+                    hideLoading();
+                    
+                    let errorMessage = 'Desculpe, ocorreu um erro. Tente novamente.';
+                    
+                    if (status === 'timeout') {
+                        errorMessage = 'A resposta demorou muito. Tente novamente.';
+                    } else if (xhr.status === 0) {
+                        errorMessage = 'Não foi possível conectar ao servidor. Verifique sua conexão.';
+                    } else if (xhr.status >= 500) {
+                        errorMessage = 'Erro interno do servidor. Tente novamente em alguns minutos.';
+                    }
+                    
+                    const errorMessageElement = createMessageElement(errorMessage, false);
+                    errorMessageElement.querySelector('.message-bubble').style.backgroundColor = 'var(--mdc-error)';
+                    errorMessageElement.querySelector('.message-bubble').style.color = 'var(--mdc-on-error)';
+                    chat.appendChild(errorMessageElement);
+                    scrollToBottom();
+                    
+                    console.error('Error sending message:', error);
+                }
+            });
+        }
+        
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        
+        inputMessage.addEventListener('keypress', function(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault();
+                sendMessage(); 
+            }
         });
         
-        const clientMessage = document.createElement('div');
-        clientMessage.className = 'message-client';
-        clientMessage.innerHTML = '<div class="message-box"><p>' + inputMessage.value + '</p></div>';
-        chat.appendChild(clientMessage);
-        
-        // Send messages to Python server
-        $.ajax({
-          url: 'http://localhost:5000/get_response',
-          type: 'POST',
-          contentType: 'application/json',
-          data: JSON.stringify({ messages: messages }),
-          success: function(response) {
-            const botMessage = document.createElement('div');
-            botMessage.className = 'message-bot'; 
-            botMessage.innerHTML = '<div class="message-box"><p>' + response.response + '</p></div>';   
-            chat.appendChild(botMessage);
-          }
+        // Initialize when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeMDC();
+            inputMessage.focus();
         });
         
-        inputMessage.value = '';
-      }
-    }
-    
-    sendButton.addEventListener('click', sendMessage);
-    
-    inputMessage.addEventListener('keyup', function(event) {
-      if (event.key === 'Enter') {
-        sendMessage(); 
-      }
-    });
-</script>    
+        // Add shake animation CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes shake {
+                0%, 100% { transform: translateX(0); }
+                25% { transform: translateX(-5px); }
+                75% { transform: translateX(5px); }
+            }
+            
+            .welcome-message {
+                transition: opacity 0.3s ease, transform 0.3s ease;
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>    
