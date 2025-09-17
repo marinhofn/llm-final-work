@@ -1,0 +1,75 @@
+<!DOCTYPE html> 
+    <html lang="en">
+    <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />  
+    <link rel="stylesheet" href="styles.css" />
+    <title>Climate Assistant</title>
+    </head>
+    <body>
+    <div class="chat-wrapper">
+        <div class="chat-container">
+        <div class="navbar">
+            <a href="#"><img src="./seta.png" alt="Seta para a esquerda" style="width: 15px; height: 15px; vertical-align: middle" /></a>
+            <a href="#" style="font-weight: bold">Climate Assistant</a>  
+        </div>
+        <div class="chat" id="chat">    
+        </div>
+        <div class="input-bar">
+            <input id="inputMessage" type="text" placeholder="Escreva uma mensagem para Climate Assistant ..." />
+            <button id="sendButton" style="border: none;">Enviar</button>    
+        </div>
+        <div class="footer"></div>
+        </div>  
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script>
+    let messages = [{
+          'role': 'system', 
+          'content': 'Você é um assistente especializado em mudanças climáticas e meio ambiente. Responda com base em evidências científicas e sempre cite suas fontes.'
+        }];
+
+    
+    const inputMessage = document.getElementById('inputMessage');
+    const sendButton = document.getElementById('sendButton'); 
+    const chat = document.getElementById('chat');
+    
+    function sendMessage() {
+      if (inputMessage.value) {
+        messages.push({
+          'role': 'user', 
+          'content': inputMessage.value
+        });
+        
+        const clientMessage = document.createElement('div');
+        clientMessage.className = 'message-client';
+        clientMessage.innerHTML = '<div class="message-box"><p>' + inputMessage.value + '</p></div>';
+        chat.appendChild(clientMessage);
+        
+        // Send messages to Python server
+        $.ajax({
+          url: 'http://localhost:5000/get_response',
+          type: 'POST',
+          contentType: 'application/json',
+          data: JSON.stringify({ messages: messages }),
+          success: function(response) {
+            const botMessage = document.createElement('div');
+            botMessage.className = 'message-bot'; 
+            botMessage.innerHTML = '<div class="message-box"><p>' + response.response + '</p></div>';   
+            chat.appendChild(botMessage);
+          }
+        });
+        
+        inputMessage.value = '';
+      }
+    }
+    
+    sendButton.addEventListener('click', sendMessage);
+    
+    inputMessage.addEventListener('keyup', function(event) {
+      if (event.key === 'Enter') {
+        sendMessage(); 
+      }
+    });
+</script>    
