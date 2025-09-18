@@ -45,9 +45,9 @@ sleep 5\n\
 echo "Pulling LLM model..."\n\
 ollama pull llama3.1:8b\n\
 echo "Processing documents..."\n\
-python document_processor.py\n\
+python -m ingest.document_processor\n\
 echo "Starting API server..."\n\
-python app.py' > start.sh && chmod +x start.sh
+python -m app.app' > start.sh && chmod +x start.sh
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \

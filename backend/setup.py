@@ -136,10 +136,10 @@ def main():
     
     print("\n🎉 Setup completed successfully!")
     print("\n📋 Next steps:")
-    print("1. Run document processing: python document_processor.py")
-    print("2. Start the API server: python app.py")
+    print("1. Run document processing: python -m ingest.document_processor")
+    print("2. Start the API server: python -m app.app")
     print("3. Open the frontend: pln.html")
-    print("\n📚 For evaluation: python evaluation.py")
+    print("\n📚 For evaluation: python -m eval.evaluation")
     
     return True
 

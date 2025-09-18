@@ -1,0 +1,30 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+authors:
+  - family-names: "Climate Assistant Team"
+    given-names: ""
+    orcid: ""
+title: "Climate Assistant RAG System"
+version: "1.0.0"
+date-released: 2024-09-18
+url: "https://github.com/your-username/climate-assistant-rag"
+abstract: "A Retrieval-Augmented Generation (RAG) system with LangGraph agents specialized in climate change and environmental science, based on IPCC reports and scientific documents."
+keywords:
+  - "climate change"
+  - "RAG"
+  - "LangGraph"
+  - "IPCC"
+  - "environmental science"
+  - "artificial intelligence"
+  - "natural language processing"
+license: MIT
+preferred-citation:
+  type: software
+  authors:
+    - family-names: "Climate Assistant Team"
+      given-names: ""
+  title: "Climate Assistant RAG System"
+  version: "1.0.0"
+  date-released: 2024-09-18
+  url: "https://github.com/your-username/climate-assistant-rag"
+  license: MIT
