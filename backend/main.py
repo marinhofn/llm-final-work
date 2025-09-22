@@ -17,7 +17,8 @@ def main():
         print("Commands:")
         print("  app          - Start the Flask API server")
         print("  ingest       - Process documents and create vector store")
-        print("  eval         - Run evaluation")
+        print("  eval         - Run RAGAS evaluation")
+        print("  eval-full    - Run comprehensive evaluation (RAGAS + Giskard)")
         print("  test         - Run tests")
         print("  setup        - Run setup script")
         sys.exit(1)
@@ -37,6 +38,11 @@ def main():
     elif command == "eval":
         from eval.evaluation import main as eval_main
         eval_main()
+    
+    elif command == "eval-full":
+        from eval.run_comprehensive_evaluation import main as eval_full_main
+        success = eval_full_main()
+        sys.exit(0 if success else 1)
     
     elif command == "test":
         from run_tests import run_tests

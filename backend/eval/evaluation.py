@@ -40,24 +40,34 @@ class ClimateAssistantEvaluator:
     def create_evaluation_dataset(self) -> List[Dict[str, Any]]:
         """Create evaluation dataset with questions and expected answers"""
         
-        # Base questions from config
-        base_questions = EVALUATION_QUESTIONS
+        # Try to load manually labeled questions first
+        manual_questions = self._load_manual_questions()
         
-        # Additional questions for comprehensive evaluation
-        additional_questions = [
-            "Quais são os principais gases de efeito estufa?",
-            "Como o aquecimento global afeta os padrões de chuva?",
-            "Quais são as evidências do derretimento das calotas polares?",
-            "Como as mudanças climáticas afetam a agricultura?",
-            "Quais são os cenários de temperatura do IPCC para 2100?",
-            "Como o oceano absorve CO2 da atmosfera?",
-            "Quais são os impactos das mudanças climáticas na saúde humana?",
-            "Como podemos adaptar as cidades às mudanças climáticas?",
-            "Quais são os principais sumidouros de carbono?",
-            "Como as mudanças climáticas afetam a biodiversidade marinha?"
-        ]
-        
-        all_questions = base_questions + additional_questions
+        if manual_questions:
+            logger.info(f"Loaded {len(manual_questions)} manually labeled questions")
+            all_questions = [q['question'] for q in manual_questions]
+            manual_ground_truths = {q['question']: q['ground_truth'] for q in manual_questions}
+        else:
+            # Fallback to config questions
+            logger.info("Using questions from config as fallback")
+            base_questions = EVALUATION_QUESTIONS
+            
+            # Additional questions for comprehensive evaluation
+            additional_questions = [
+                "Quais são os principais gases de efeito estufa?",
+                "Como o aquecimento global afeta os padrões de chuva?",
+                "Quais são as evidências do derretimento das calotas polares?",
+                "Como as mudanças climáticas afetam a agricultura?",
+                "Quais são os cenários de temperatura do IPCC para 2100?",
+                "Como o oceano absorve CO2 da atmosfera?",
+                "Quais são os impactos das mudanças climáticas na saúde humana?",
+                "Como podemos adaptar as cidades às mudanças climáticas?",
+                "Quais são os principais sumidouros de carbono?",
+                "Como as mudanças climáticas afetam a biodiversidade marinha?"
+            ]
+            
+            all_questions = base_questions + additional_questions
+            manual_ground_truths = {}
         
         evaluation_data = []
         
@@ -74,7 +84,7 @@ class ClimateAssistantEvaluator:
                     "question": question,
                     "answer": result["response"],
                     "contexts": context,
-                    "ground_truth": self._get_ground_truth(question),  # Placeholder
+                    "ground_truth": manual_ground_truths.get(question, self._get_ground_truth(question)),
                     "question_id": f"q_{i+1}"
                 })
                 
@@ -83,6 +93,22 @@ class ClimateAssistantEvaluator:
                 continue
         
         return evaluation_data
+    
+    def _load_manual_questions(self) -> List[Dict[str, Any]]:
+        """Load manually labeled questions from JSON file"""
+        questions_file = EVALUATION_DIR / "manual_questions.json"
+        
+        if not questions_file.exists():
+            logger.warning(f"Manual questions file not found: {questions_file}")
+            return []
+        
+        try:
+            with open(questions_file, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return data.get('evaluation_dataset', [])
+        except Exception as e:
+            logger.error(f"Error loading manual questions: {str(e)}")
+            return []
     
     def _get_ground_truth(self, question: str) -> str:
         """Get ground truth answer (placeholder - in real scenario, these would be manually labeled)"""
