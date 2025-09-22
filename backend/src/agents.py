@@ -168,11 +168,26 @@ class ClimateAssistantAgents:
         
         for i, doc in enumerate(retrieved_docs):
             context += f"\n[Fonte {i+1}]: {doc['content']}\n"
+            
+            # Get page information
+            page_number = doc['metadata'].get('page_number', 'N/A')
+            source_type = doc['metadata'].get('type', 'unknown')
+            
+            # Format source with page information
+            source_name = doc['metadata'].get('source', 'Desconhecido')
+            if source_type == 'pdf' and page_number != 'N/A':
+                source_with_page = f"{source_name} (Página {page_number})"
+            else:
+                source_with_page = source_name
+            
             citations.append({
                 "id": i+1,
                 "content": doc['content'][:200] + "...",
-                "source": doc['metadata'].get('source', 'Desconhecido'),
+                "source": source_name,
+                "source_with_page": source_with_page,
+                "page_number": page_number,
                 "url": doc['metadata'].get('url', ''),
+                "type": source_type,
                 "score": doc['score']
             })
         
@@ -198,6 +213,7 @@ class ClimateAssistantAgents:
             - Resposta clara e objetiva em Markdown
             - Citações obrigatórias [Fonte X]
             - Se aplicável, mencione limitações ou incertezas
+            - As fontes incluem informações de página quando disponíveis
             """),
             HumanMessage(content=f"""
             Consulta: {query}
@@ -311,7 +327,9 @@ class ClimateAssistantAgents:
         if citations:
             citation_text = "\n\n**Fontes consultadas:**\n"
             for citation in citations:
-                citation_text += f"- [{citation['id']}] {citation['source']}"
+                # Use source_with_page if available, otherwise fallback to source
+                source_display = citation.get('source_with_page', citation['source'])
+                citation_text += f"- [{citation['id']}] {source_display}"
                 if citation['url']:
                     citation_text += f" ({citation['url']})"
                 citation_text += "\n"

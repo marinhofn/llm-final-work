@@ -94,12 +94,16 @@ class DocumentProcessor:
             loader = PyPDFLoader(str(pdf_path))
             docs = loader.load()
             
-            # Add metadata
+            # Add metadata and preserve page information
             for doc in docs:
+                # PyPDFLoader already includes page information in metadata
+                page_number = doc.metadata.get('page', 0) + 1  # Convert 0-based to 1-based
                 doc.metadata.update({
                     "source": name,
                     "url": url,
-                    "type": "pdf"
+                    "type": "pdf",
+                    "page_number": page_number,
+                    "original_page": doc.metadata.get('page', 0)  # Keep original for reference
                 })
                 
             return docs
@@ -112,11 +116,17 @@ class DocumentProcessor:
         # Split documents into chunks
         chunks = self.text_splitter.split_documents(documents)
         
-        # Add chunk metadata
+        # Add chunk metadata and preserve page information
         for i, chunk in enumerate(chunks):
+            # Preserve page information from original document
+            page_number = chunk.metadata.get('page_number', 'N/A')
+            original_page = chunk.metadata.get('original_page', 'N/A')
+            
             chunk.metadata.update({
                 "chunk_id": i,
-                "chunk_size": len(chunk.page_content)
+                "chunk_size": len(chunk.page_content),
+                "page_number": page_number,
+                "original_page": original_page
             })
             
         logger.info(f"Created {len(chunks)} chunks from {len(documents)} documents")
