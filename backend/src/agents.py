@@ -114,8 +114,9 @@ class ClimateAssistantAgents:
         query = state["query"]
         
         try:
-            # Search for relevant documents
-            docs_with_scores = self.document_processor.search_with_scores(query, k=5)
+            # Search for relevant documents with more flexible k parameter
+            # Use 10 for better coverage, but we'll filter later
+            docs_with_scores = self.document_processor.search_with_scores(query, k=10)
             
             retrieved_docs = []
             for doc, score in docs_with_scores:
@@ -153,7 +154,7 @@ class ClimateAssistantAgents:
         return state
     
     def answerer_agent(self, state: AgentState) -> AgentState:
-        """Answerer agent that generates responses with citations"""
+        """Answerer agent that generates responses with dynamic citations"""
         query = state["query"]
         retrieved_docs = state["retrieved_docs"]
         
@@ -162,26 +163,29 @@ class ClimateAssistantAgents:
             state["citations"] = []
             return state
         
-        # Prepare context with citations
-        context = ""
-        citations = []
+        # Select top 5 most relevant documents for context
+        top_docs = retrieved_docs[:5]
         
-        for i, doc in enumerate(retrieved_docs):
-            context += f"\n[Fonte {i+1}]: {doc['content']}\n"
+        # Prepare context with potential citations
+        context = ""
+        potential_citations = {}
+        
+        for i, doc in enumerate(top_docs):
+            source_id = i + 1
+            context += f"\n[Fonte {source_id}]: {doc['content']}\n"
             
-            # Get page information
+            # Store potential citation info
             page_number = doc['metadata'].get('page_number', 'N/A')
             source_type = doc['metadata'].get('type', 'unknown')
-            
-            # Format source with page information
             source_name = doc['metadata'].get('source', 'Desconhecido')
+            
             if source_type == 'pdf' and page_number != 'N/A':
                 source_with_page = f"{source_name} (Página {page_number})"
             else:
                 source_with_page = source_name
             
-            citations.append({
-                "id": i+1,
+            potential_citations[source_id] = {
+                "id": source_id,
                 "content": doc['content'][:200] + "...",
                 "source": source_name,
                 "source_with_page": source_with_page,
@@ -189,7 +193,7 @@ class ClimateAssistantAgents:
                 "url": doc['metadata'].get('url', ''),
                 "type": source_type,
                 "score": doc['score']
-            })
+            }
         
         answerer_prompt = ChatPromptTemplate.from_messages([
             SystemMessage(content="""
@@ -199,10 +203,11 @@ class ClimateAssistantAgents:
             IMPORTANTE:
             1. Use APENAS as informações dos documentos fornecidos
             2. Cite as fontes usando [Fonte X] onde X é o número da fonte
-            3. Se não houver informações suficientes, diga claramente
-            4. Seja preciso e científico
-            5. Evite especulações ou informações não presentes nos documentos
-            6. **Formate sua resposta usando Markdown** para melhor legibilidade:
+            3. **CITE APENAS as fontes que você realmente usa na resposta**
+            4. Se não houver informações suficientes, diga claramente
+            5. Seja preciso e científico
+            6. Evite especulações ou informações não presentes nos documentos
+            7. **Formate sua resposta usando Markdown** para melhor legibilidade:
                - Use **negrito** para termos importantes
                - Use *itálico* para ênfase
                - Use listas com - ou números quando apropriado
@@ -211,7 +216,7 @@ class ClimateAssistantAgents:
             
             Formato da resposta:
             - Resposta clara e objetiva em Markdown
-            - Citações obrigatórias [Fonte X]
+            - Citações obrigatórias [Fonte X] APENAS para as fontes realmente utilizadas
             - Se aplicável, mencione limitações ou incertezas
             - As fontes incluem informações de página quando disponíveis
             """),
@@ -221,14 +226,53 @@ class ClimateAssistantAgents:
             Documentos relevantes:
             {context}
             
-            Responda baseando-se APENAS nestes documentos e cite as fontes.
+            Responda baseando-se APENAS nestes documentos e cite APENAS as fontes que você realmente usar.
             """)
         ])
         
         response = self.llm.invoke(answerer_prompt.format_messages())
+        answer_text = response.content
         
-        state["answer"] = response.content
-        state["citations"] = citations
+        # Extract which citations were actually used in the response
+        used_citations = []
+        used_source_ids = set()
+        
+        # Track which sources are actually referenced in the text
+        for source_id, citation_info in potential_citations.items():
+            # Check if this source was referenced in the answer
+            if f"[Fonte {source_id}]" in answer_text or f"Fonte {source_id}" in answer_text:
+                used_source_ids.add(source_id)
+        
+        # Create clean citations list with sequential numbering
+        citation_counter = 1
+        unique_sources = set()  # Track unique sources to avoid duplicates
+        
+        for source_id in sorted(used_source_ids):
+            citation_info = potential_citations[source_id]
+            source_key = f"{citation_info['source']}_{citation_info.get('page_number', 'N/A')}"
+            
+            # Only add if we haven't seen this exact source+page combination
+            if source_key not in unique_sources:
+                unique_sources.add(source_key)
+                
+                # Update citation with clean numbering
+                clean_citation = citation_info.copy()
+                clean_citation['id'] = citation_counter
+                used_citations.append(clean_citation)
+                citation_counter += 1
+        
+        # If no explicit citations found but answer exists, include the most relevant source
+        if not used_citations and answer_text and len(answer_text.strip()) > 50:
+            logger.warning("No explicit citations found in answer, including most relevant source")
+            if potential_citations:
+                first_citation = list(potential_citations.values())[0]
+                first_citation['id'] = 1
+                used_citations.append(first_citation)
+        
+        state["answer"] = answer_text
+        state["citations"] = used_citations
+        
+        logger.info(f"Generated answer with {len(used_citations)} actual citations")
         
         return state
     
@@ -319,20 +363,36 @@ class ClimateAssistantAgents:
         return state
     
     def finalizer_agent(self, state: AgentState) -> AgentState:
-        """Finalizer agent that formats the final response"""
+        """Finalizer agent that formats the final response with clean citations"""
         final_response = state["final_response"]
         citations = state["citations"]
         
-        # Format citations
+        # Remove any existing citation text to avoid duplication
+        if "**Fontes consultadas:**" in final_response:
+            final_response = final_response.split("**Fontes consultadas:**")[0].strip()
+        
+        # Format citations cleanly
         if citations:
             citation_text = "\n\n**Fontes consultadas:**\n"
+            
             for citation in citations:
-                # Use source_with_page if available, otherwise fallback to source
-                source_display = citation.get('source_with_page', citation['source'])
-                citation_text += f"- [{citation['id']}] {source_display}"
-                if citation['url']:
-                    citation_text += f" ({citation['url']})"
-                citation_text += "\n"
+                source_name = citation.get('source', 'Fonte desconhecida')
+                page_number = citation.get('page_number', 'N/A')
+                doc_type = citation.get('type', 'unknown')
+                citation_id = citation.get('id', '?')
+                
+                # Format source display based on type
+                if doc_type == 'local_pdf' and page_number != 'N/A':
+                    source_display = f"{source_name}, página {page_number}"
+                elif doc_type == 'website':
+                    url = citation.get('url', '')
+                    source_display = f"{source_name}"
+                    if url and url.startswith('http'):
+                        source_display += f" ({url})"
+                else:
+                    source_display = source_name
+                
+                citation_text += f"- [{citation_id}] {source_display}\n"
             
             final_response += citation_text
         
