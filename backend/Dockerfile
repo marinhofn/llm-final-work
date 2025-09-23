@@ -41,16 +41,16 @@ EXPOSE 5000
 RUN echo '#!/bin/bash\n\
 echo "Starting Ollama service..."\n\
 ollama serve &\n\
-sleep 5\n\
+sleep 10\n\
 echo "Pulling LLM model..."\n\
 ollama pull llama3.1:8b\n\
 echo "Processing documents..."\n\
-python -m ingest.document_processor\n\
+python main.py ingest\n\
 echo "Starting API server..."\n\
-python -m app.app' > start.sh && chmod +x start.sh
+python main.py app' > start.sh && chmod +x start.sh
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+HEALTHCHECK --interval=30s --timeout=10s --start-period=120s --retries=3 \
     CMD curl -f http://localhost:5000/health || exit 1
 
 # Start the application

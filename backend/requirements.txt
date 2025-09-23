@@ -4,7 +4,7 @@ langchain-community==0.2.0
 langgraph==0.1.1
 langchain-ollama==0.1.0
 langchain-chroma==0.1.1
-langchain-faiss==0.1.1
+# langchain-faiss is included in langchain-community
 
 # Web framework
 flask==3.0.0
