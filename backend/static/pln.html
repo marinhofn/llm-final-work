@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <link rel="stylesheet" href="styles.css" />
-    <title>Tributouro - Assistente Jurídico</title>
+    <title>Climate Assistant</title>
 </head>
 <body>
     <div class="mdc-layout-grid">
@@ -20,7 +20,7 @@
                                 <button class="mdc-icon-button mdc-top-app-bar__navigation-icon">
                                     <i class="material-icons">arrow_back</i>
                                 </button>
-                                <span class="mdc-top-app-bar__title">Tributouro</span>
+                                <span class="mdc-top-app-bar__title">Climate Assistant</span>
                             </section>
                             <section class="mdc-top-app-bar__section mdc-top-app-bar__section--align-end">
                                 <button class="mdc-icon-button" title="Mais opções">
@@ -39,9 +39,9 @@
                                         <div class="welcome-icon">
                                             <i class="material-icons">gavel</i>
                                         </div>
-                                        <h2 class="mdc-typography--headline6">Bem-vindo ao Tributouro</h2>
+                                        <h2 class="mdc-typography--headline6">Bem-vindo ao Climate Assistant</h2>
                                         <p class="mdc-typography--body2">
-                                            Sou seu assistente jurídico especializado em direito tributário brasileiro.
+                                            Sou seu assistente especializado em mudanças climáticas e meio ambiente.
                                             Como posso ajudá-lo hoje?
                                         </p>
                                     </div>
@@ -53,11 +53,11 @@
                     <!-- Input Area -->
                     <div class="input-container">
                         <div class="mdc-text-field mdc-text-field--outlined mdc-text-field--with-trailing-icon">
-                            <input class="mdc-text-field__input" id="inputMessage" type="text" placeholder="Digite sua pergunta jurídica..." />
+                            <input class="mdc-text-field__input" id="inputMessage" type="text" placeholder="Digite sua pergunta sobre mudanças climáticas..." />
                             <div class="mdc-notched-outline">
                                 <div class="mdc-notched-outline__leading"></div>
                                 <div class="mdc-notched-outline__notch">
-                                    <label for="inputMessage" class="mdc-floating-label">Sua pergunta</label>
+                                    <label for="inputMessage" class="mdc-floating-label">Sua pergunta sobre clima</label>
                                 </div>
                                 <div class="mdc-notched-outline__trailing"></div>
                             </div>
@@ -107,7 +107,7 @@
     <script>
         let messages = [{
             'role': 'system', 
-            'content': 'responda a seguinte pergunta de forma clara e concisa, contendo as leis que dizem respeito ao assunto no Brasil e aconselhe, caso necessário, a buscar um advogado'
+            'content': 'Você é um assistente especializado em mudanças climáticas e meio ambiente. Responda com base em evidências científicas e sempre cite suas fontes.'
         }];
 
         const inputMessage = document.getElementById('inputMessage');
@@ -231,7 +231,7 @@
             
             // Send messages to Python server
             $.ajax({
-                url: 'http://localhost:5000/get_response',
+                url: 'http://localhost:5001/get_response',
                 type: 'POST',
                 contentType: 'application/json',
                 data: JSON.stringify({ messages: messages }),

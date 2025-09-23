@@ -200,42 +200,23 @@ def reload_system():
 @app.route('/')
 def index():
     """Serve the main HTML file"""
-    try:
-        return send_from_directory('../static', 'pln.html')
-    except Exception as e:
-        logger.error(f"Error serving index: {e}")
-        return f"Error serving frontend: {e}", 500
+    return send_from_directory('../static', 'pln.html')
 
 @app.route('/<path:filename>')
 def static_files(filename):
     """Serve static files"""
-    try:
-        return send_from_directory('../static', filename)
-    except Exception as e:
-        logger.error(f"Error serving static file {filename}: {e}")
-        return f"File not found: {filename}", 404
+    return send_from_directory('../static', filename)
 
 if __name__ == "__main__":
     logger.info("Starting Climate Assistant API...")
     
     # Initialize the system
-    max_retries = 3
-    for attempt in range(max_retries):
-        logger.info(f"Initialization attempt {attempt + 1}/{max_retries}")
-        if initialize_system():
-            logger.info(f"Starting server on {API_HOST}:{API_PORT}")
-            app.run(host=API_HOST, port=API_PORT, debug=DEBUG)
-            break
-        else:
-            logger.warning(f"Initialization failed on attempt {attempt + 1}")
-            if attempt < max_retries - 1:
-                import time
-                logger.info("Retrying in 2 seconds...")
-                time.sleep(2)
+    if initialize_system():
+        logger.info(f"Starting server on {API_HOST}:{API_PORT}")
+        app.run(host=API_HOST, port=API_PORT, debug=DEBUG)
     else:
-        logger.error("Failed to initialize system after all attempts.")
+        logger.error("Failed to initialize system. Please check your configuration.")
         logger.info("Make sure to:")
-        logger.info("1. Run document processing first: python -m ingest.document_processor")
+        logger.info("1. Run document processing first: python document_processor.py")
         logger.info("2. Have Ollama running with the specified model")
         logger.info("3. Check your configuration in config.py")
-        logger.info("4. Try reloading via: curl -X POST http://localhost:5001/reload")

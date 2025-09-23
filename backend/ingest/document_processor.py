@@ -46,6 +46,7 @@ class DocumentProcessor:
         """Load documents from various sources"""
         documents = []
         
+        # Load documents from configured sources
         for source in DOCUMENT_SOURCES:
             try:
                 if source["type"] == "website":
@@ -57,7 +58,11 @@ class DocumentProcessor:
                 logger.info(f"Loaded {len(docs)} documents from {source['name']}")
             except Exception as e:
                 logger.error(f"Error loading {source['name']}: {str(e)}")
-                
+        
+        # Load local PDFs from documents directory
+        local_docs = self._load_local_pdfs()
+        documents.extend(local_docs)
+        
         return documents
     
     def _load_website(self, url: str, name: str) -> List[Document]:
@@ -110,6 +115,48 @@ class DocumentProcessor:
         except Exception as e:
             logger.error(f"Error loading PDF {url}: {str(e)}")
             return []
+    
+    def _load_local_pdfs(self) -> List[Document]:
+        """Load all PDF files from the documents directory"""
+        documents = []
+        pdf_files = list(DOCUMENTS_DIR.glob("*.pdf"))
+        
+        logger.info(f"Found {len(pdf_files)} PDF files in {DOCUMENTS_DIR}")
+        
+        for pdf_file in pdf_files:
+            try:
+                # Skip hidden files and .gitkeep
+                if pdf_file.name.startswith('.') or pdf_file.name == '.gitkeep':
+                    continue
+                    
+                logger.info(f"Loading local PDF: {pdf_file.name}")
+                loader = PyPDFLoader(str(pdf_file))
+                docs = loader.load()
+                
+                # Extract document name without extension
+                doc_name = pdf_file.stem
+                
+                # Add metadata and preserve page information
+                for doc in docs:
+                    page_number = doc.metadata.get('page', 0) + 1  # Convert 0-based to 1-based
+                    doc.metadata.update({
+                        "source": doc_name,
+                        "url": str(pdf_file),
+                        "type": "local_pdf",
+                        "page_number": page_number,
+                        "original_page": doc.metadata.get('page', 0),
+                        "file_path": str(pdf_file),
+                        "file_name": pdf_file.name
+                    })
+                    
+                documents.extend(docs)
+                logger.info(f"Loaded {len(docs)} pages from {pdf_file.name}")
+                
+            except Exception as e:
+                logger.error(f"Error loading local PDF {pdf_file}: {str(e)}")
+                
+        logger.info(f"Total local PDF documents loaded: {len(documents)}")
+        return documents
     
     def process_documents(self, documents: List[Document]) -> List[Document]:
         """Process and chunk documents"""
